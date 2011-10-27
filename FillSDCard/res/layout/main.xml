@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    
+    android:orientation="vertical" >
+
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="60dip" 
+    android:text="@string/hello"
+    android:id="@+id/leftStorageSpace"
+    />
+
+<TextView
+    android:id="@+id/tip1"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:text="Please input a number (KB) to fill SD card" 
+    android:layout_below="@id/leftStorageSpace"
+    android:paddingTop= "20dip"/>
+
+<EditText
+    android:id="@+id/fillSize"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:inputType="number" 
+    android:layout_below="@id/tip1"
+    android:hint="Please fill size you need here."
+/>
+<Button
+    android:id="@+id/btnVerifyData"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Verify Data" 
+    android:layout_below="@id/fillSize"
+    />
+
+<Button
+    android:id="@+id/btnFillSD"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Fill SD Card" 
+    android:layout_below="@id/fillSize"
+    android:layout_toRightOf="@id/btnVerifyData"
+    />
+
+
+
+<TextView
+    android:id="@+id/tip2"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Remove temp generated files" 
+    android:layout_below="@id/btnFillSD"
+    android:paddingTop="20dip"
+    />
+
+<Button
+    android:id="@+id/btnClean"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Clean Temp Files" 
+    android:layout_below="@id/tip2"
+    />
+
+<Button
+    android:id="@+id/btnRefresh"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Refresh" 
+    android:layout_below="@id/btnClean"
+    />
+</RelativeLayout>
