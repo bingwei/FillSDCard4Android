@@ -96,7 +96,7 @@ public class FillSDCard extends Activity {
 		        BufferedOutputStream Buff = null;  
 		        Log.w(TAG, "Fill size when filling: " + fillSize);
 				// TODO Auto-generated method stub
-		        File myFile = new File(SDCardPath + File.separator + System.currentTimeMillis());
+		        File myFile = new File(tmpFolderPath + File.separator + System.currentTimeMillis());
         		try {
         			outputStream = new FileOutputStream(myFile);
         			Buff = new BufferedOutputStream(outputStream);
