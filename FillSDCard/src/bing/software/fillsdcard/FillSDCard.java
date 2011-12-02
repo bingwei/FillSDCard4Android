@@ -3,11 +3,13 @@ package bing.software.fillsdcard;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.os.StatFs;
 import android.util.Log;
 import android.view.View;
@@ -30,15 +32,20 @@ import android.widget.Toast;
 public class FillSDCard extends Activity {
 	private final String TAG = "bing";
 	final String KB = "abcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwxyabcdefghijklmnopqrstuvwx";
+	final byte[] BKB = KB.getBytes();
 	final String tempFolderName = "tmpdemoWEDFRVCVBHYUMMNFDHJI";
 	final int leftSizeWithPermission = 400;
 	boolean mExternalStorageAvailable = false;
 	boolean mExternalStorageWriteable = false;
+	boolean isReadyToRemoveFolder = false;
 	int fillSize = 0;
+	String tmpFolderPath;
 	String fillContentText = "This is demo.";
 	String SDCardPath;
-	String tmpFolderPath;
 	int freeSize;
+	FileOutputStream outputStream;
+	BufferedOutputStream Buff;
+	ProgressDialog progressDialog;
 
 	TextView tvLeftStorageSpace;
 	EditText etFillSize;
@@ -82,8 +89,17 @@ public class FillSDCard extends Activity {
 
         
         SDCardPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+        tmpFolderPath= new File(SDCardPath + File.separator + tempFolderName).getAbsolutePath(); 
+        
+        if(!generateTmpFolder()){
+        	btnFillSDCard.setEnabled(false);
+        	btnCleanTempFiles.setEnabled(false);
+        	Log.e(TAG, String.format("Temp folder<%s> meets problem", tempFolderName)); 
+        	tvLeftStorageSpace.setText("Please check SD card. Creating folder failed."); 
+        }
         
         getStateOfStorage();
+        
         
         /*
          * Fill SD card with one file
@@ -92,29 +108,45 @@ public class FillSDCard extends Activity {
         btnFillSDCard.setOnClickListener(new OnClickListener(){
 			@Override
 			public void onClick(View v) {
-		        FileOutputStream outputStream = null;
-		        BufferedOutputStream Buff = null;  
-		        Log.w(TAG, "Fill size when filling: " + fillSize);
-				// TODO Auto-generated method stub
-		        File myFile = new File(tmpFolderPath + File.separator + System.currentTimeMillis());
-        		try {
-        			outputStream = new FileOutputStream(myFile);
-        			Buff = new BufferedOutputStream(outputStream);
-        			
-        			for(int i = 0; i < fillSize; i++){
-        				Buff.write(KB.getBytes());
-        				Buff.flush();
-        			}
-        			Buff.close();
-        			outputStream.close();
-        			getStateOfStorage();
-        			tvLeftStorageSpace.setText(String.format("After fillinig, current free size: %dKB.", 
-        	        		freeSize));
-        			btnFillSDCard.setEnabled(false);
-        		} catch (IOException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
+				isReadyToRemoveFolder = false;
+				btnFillSDCard.setEnabled(false);
+				progressDialog = ProgressDialog.show(FillSDCard.this, "Please wait", "It is filling SD Card...", true);
+//				if(mThreadLoadApps.isAlive()){
+//					mThreadLoadApps.interrupt();
+//				}
+//				mThreadLoadApps.start();
+				new Thread(){ 
+
+			        @Override 
+
+			        public void run() {
+//			        	while(!this.isInterrupted()){
+			        		try{            
+			        			if(generateTmpFolder()){
+			        				outputStream = null;
+			        				Buff = null;  
+			        				Log.w(TAG, "Fill size when filling: " + fillSize);
+			        				// TODO Auto-generated method stub
+			        				File myFile = new File(tmpFolderPath + File.separator + System.currentTimeMillis());
+			        				
+			        				outputStream = new FileOutputStream(myFile);
+			        				Buff = new BufferedOutputStream(outputStream);
+			        				
+			        				for(int i = fillSize; i > 0; i--){
+			        					Buff.write(KB.getBytes());
+			        				}
+			        				Buff.flush();
+			        				Buff.close();
+			        				outputStream.close();
+			        			}
+			        			handler.sendEmptyMessage(0);
+			        			progressDialog.dismiss();
+			        		}catch(Exception e){
+			        			Log.v("_Error_", e.getMessage());
+			        		}
+//			        	}
+			             }
+			   }.start();
 			}    	
         });
         
@@ -127,25 +159,6 @@ public class FillSDCard extends Activity {
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				// Generate temperate folder 
-				File tmpFolder = new File(SDCardPath + File.separator + tempFolderName); 
-		        tmpFolderPath = tmpFolder.getAbsolutePath();
-		        Log.w(TAG, String.format("tmpFolderPath: %s", tmpFolderPath)); 
-		        
-		        boolean isTempFolderReady = false;
-		        if(!tmpFolder.exists()){
-		        	isTempFolderReady = tmpFolder.mkdirs();
-		        }else{
-		        	isTempFolderReady = true;
-		        }
-		        
-		        if(!isTempFolderReady){
-		        	btnFillSDCard.setEnabled(false);
-		        	btnCleanTempFiles.setEnabled(false);
-		        	Log.e(TAG, String.format("Temp folder<%s> meets problem", tempFolderName)); 
-		        	tvLeftStorageSpace.setText("Please check SD card. Creating folder failed."); 
-		        }
-		        
 		        // Set fillSize
 				if(etFillSize.getText().length() == 0){
 		        	new Toast(getApplication());
@@ -174,7 +187,7 @@ public class FillSDCard extends Activity {
 		        		tvLeftStorageSpace.setText(String.format("We will fill SD Card with %dKB as filled in Edit text\n" +
 								"Left storage space is %dKB\n" +
 								"Please wait for a while and not quit.", 
-								fillSize, freeSize-fillSize));
+								fillSize, freeSize - fillSize));
 		        	}
 		        }
 				etFillSize.setEnabled(false);
@@ -199,7 +212,8 @@ public class FillSDCard extends Activity {
 					for(int i = 0; i < count; i++){
 						files[i].delete();
 					}
-					tmpFolder.delete();
+					isReadyToRemoveFolder = true;
+//					tmpFolder.delete();
 				}
 				getStateOfStorage();
     	        if(freeSize > leftSizeWithPermission){
@@ -232,6 +246,72 @@ public class FillSDCard extends Activity {
         });
         
     }
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            switch(msg.what){
+            case 0:
+				getStateOfStorage();
+				tvLeftStorageSpace.setText(String.format("After filling, current free size: %dKB.", 
+						freeSize));
+                break;
+            default:
+                break;
+            }
+        }
+    };
+    
+    private Thread mThreadLoadApps = new Thread(){ 
+
+        @Override 
+
+        public void run() {
+//        	while(!this.isInterrupted()){
+        		try{            
+        			if(generateTmpFolder()){
+        				outputStream = null;
+        				Buff = null;  
+        				Log.w(TAG, "Fill size when filling: " + fillSize);
+        				// TODO Auto-generated method stub
+        				File myFile = new File(tmpFolderPath + File.separator + System.currentTimeMillis());
+        				
+        				outputStream = new FileOutputStream(myFile);
+        				Buff = new BufferedOutputStream(outputStream);
+        				
+        				for(int i = fillSize; i > 0; i--){
+        					Buff.write(KB.getBytes());
+        				}
+        				Buff.flush();
+        				Buff.close();
+        				outputStream.close();
+        			}
+        			handler.sendEmptyMessage(0);
+        			progressDialog.dismiss();
+        		}catch(Exception e){
+        			Log.v("_Error_", e.getMessage());
+        		}
+//        	}
+             }
+   };
+   
+
+    
+    public boolean generateTmpFolder(){
+		// Generate temperate folder 
+
+        Log.w(TAG, String.format("tmpFolderPath: %s", tmpFolderPath)); 
+        
+        File tmpFolder = new File(tmpFolderPath);
+        
+        boolean isTempFolderReady = false;
+        if(!tmpFolder.exists()){
+        	isTempFolderReady = tmpFolder.mkdirs();
+        }else{
+        	isTempFolderReady = true;
+        }
+
+        return isTempFolderReady;
+    }
     
     public void getStateOfStorage(){
         StatFs SDCardInfo = new StatFs(SDCardPath);
@@ -250,4 +330,15 @@ public class FillSDCard extends Activity {
         }
     }
     
+    public void onStop(){
+    	super.onStop();
+    	File tmpFolder = new File(tmpFolderPath);
+		if(tmpFolder.exists() && isReadyToRemoveFolder)
+			tmpFolder.delete();
+		isReadyToRemoveFolder = false;
+    }
+    
+    public void onDestory(){
+    	super.onDestroy();
+    }
 }
