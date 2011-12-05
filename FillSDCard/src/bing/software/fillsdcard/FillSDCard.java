@@ -187,6 +187,7 @@ public class FillSDCard extends Activity {
 		        		btnFillSDCard.setEnabled(false);
 		        	}else{
 		        		if(fillSize < 8){
+		        			etFillSize.setText("8");
 		        			fillSize = 8;
 		        		}
 		        		btnFillSDCard.setEnabled(true);

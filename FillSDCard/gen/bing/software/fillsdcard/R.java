@@ -16,7 +16,7 @@ public final class R {
     public static final class id {
         public static final int btnClean=0x7f050006;
         public static final int btnFillSD=0x7f050004;
-        public static final int btnRefresh=0x7f050007;
+        public static final int btnReset=0x7f050007;
         public static final int btnVerifyData=0x7f050003;
         public static final int fillSize=0x7f050002;
         public static final int leftStorageSpace=0x7f050000;

@@ -65,10 +65,11 @@
     />
 
 <Button
-    android:id="@+id/btnRefresh"
+    android:id="@+id/btnReset"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Refresh" 
+    android:text="Reset Size" 
     android:layout_below="@id/btnClean"
     />
+
 </RelativeLayout>
