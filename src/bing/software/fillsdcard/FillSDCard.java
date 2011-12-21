@@ -227,9 +227,13 @@ public class FillSDCard extends Activity {
 //        		etFetchData.setText(String.valueOf(mFillSize));
         		mBtnFill.setEnabled(true);
         		mTvLeftStorageSpace.setText(String.format("We will fill SD Card with %dKB as filled in Edit text\n" +
-						"Left storage space is %dKB\n" +
+						"Left storage space is %dKB%n" +
+						"Left storage percent is %f%%%n" +
 						"Please wait for a while and not quit.", 
-						mFillSize, mAvailableSize - mFillSize));
+						mFillSize, 
+						mAvailableSize - mFillSize,
+						(mAvailableSize - mFillSize)*100f/mTotalSize
+						));
         	}
         }
 		etFetchData.setEnabled(false);
@@ -391,14 +395,14 @@ public class FillSDCard extends Activity {
         			"Current free size: %fGB%n" +
         			"Current free size: %fMB%n" +
         			"Current free size: %dKB%n" +
-        			"Current filled: %d%%%n" +
+        			"Current filled: %f%%%n" +
         			"Total size: %dKB%n"+
         			"Default fill size: %dKB%n"+
         			"Minimum fill size (single block size): %dKB",
         			mAvailableSize / 1024f / 1024, 
         			mAvailableSize / 1024f, 
         			mAvailableSize, 
-        			100 - availableBlocks * 100/totalBlock,
+        			100 - availableBlocks * 100f/totalBlock,
         			mTotalSize,
         			mAvailableSize - mLeftSizeWithPermission,
         			mSingleBlockSize
