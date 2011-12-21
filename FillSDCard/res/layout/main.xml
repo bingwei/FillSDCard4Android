@@ -1,75 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    
     android:orientation="vertical" >
 
 <TextView  
     android:layout_width="fill_parent" 
-    android:layout_height="60dip" 
-    android:text="@string/hello"
+    android:layout_height="120sp" 
     android:id="@+id/leftStorageSpace"
     />
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="2dip" 
+    android:background="#FFFFFF"
+    />
 
-<TextView
-    android:id="@+id/tip1"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:text="Please input a number (KB) to fill SD card" 
-    android:layout_below="@id/leftStorageSpace"
-    android:paddingTop= "20dip"/>
+<!-- Fill with size -->
+ <RadioGroup
+   android:layout_width="fill_parent"
+   android:layout_height="wrap_content"
+   android:orientation="vertical">
+   <RadioButton android:id="@+id/rbtnFillWithSize"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="@string/tipFillWithSize"
+       android:textSize="13dip"
+       android:checked="true"
+       />
+   <RadioButton android:id="@+id/rbtnFillWithPercent"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:text="@string/tipFillWithPercent"
+       android:textSize="13dip"
+       />
+  </RadioGroup>
 
 <EditText
-    android:id="@+id/fillSize"
+    android:id="@+id/etfillWithSize"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:inputType="number" 
-    android:layout_below="@id/tip1"
-    android:hint="Please fill size you need here."
+    android:hint="@string/hintFillWithSize"
 />
-<Button
-    android:id="@+id/btnVerifyData"
-    android:layout_width="wrap_content"
+<EditText
+    android:id="@+id/etfillWithPercent"
+    android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:text="Verify Data" 
-    android:layout_below="@id/fillSize"
-    />
+    android:inputType="number" 
+    android:hint="@string/hintFillWithPercent"
+    android:enabled="false"
+/>
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal" 
+	    android:paddingTop="20sp"
+	    >
+		<Button
+		    android:id="@+id/btnClean"
+		    android:textSize="15dip"
+			android:layout_width="70dip"
+		    android:layout_height="wrap_content"
+		    android:text="@string/btnClean"
+		    android:layout_weight="1"
+    	/>
+		<Button
+		    android:id="@+id/btnVerify"
+		    android:layout_width="70dip"
+		    android:textSize="15dip"
+		    android:layout_height="wrap_content"
+		    android:text="@string/btnVerify"
+		    android:layout_weight="2"
+		    />
+	</LinearLayout>
 
-<Button
-    android:id="@+id/btnFillSD"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Fill SD Card" 
-    android:layout_below="@id/fillSize"
-    android:layout_toRightOf="@id/btnVerifyData"
-    />
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal" 
+	    android:paddingTop="20sp"
+	    >
+	<Button
+	    android:id="@+id/btnReset"
+	    android:textSize="15dip"
+	    android:layout_gravity="right"
+		android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/btnReset"
+	    android:layout_weight="1"
+	    />
+	<Button
+	    android:id="@+id/btnFill"
+	    android:textSize="15dip"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:text="@string/btnFill"
+	    android:textStyle="bold"
+	    android:layout_weight="1"
+	    />
+	</LinearLayout>
 
-
-
-<TextView
-    android:id="@+id/tip2"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Remove temp generated files" 
-    android:layout_below="@id/btnFillSD"
-    android:paddingTop="20dip"
-    />
-
-<Button
-    android:id="@+id/btnClean"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Clean Temp Files" 
-    android:layout_below="@id/tip2"
-    />
-
-<Button
-    android:id="@+id/btnReset"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Reset Size" 
-    android:layout_below="@id/btnClean"
-    />
-
-</RelativeLayout>
+</LinearLayout>

@@ -38,6 +38,7 @@
     <string name="generate">Generate</string>    
     <string name="removeAll">Remove All</string>    
     <string name="contactDigitFailure">Contact name or phone digit is invalid, check logs.</string>    
-    <string name="progressDialogTitle">Loading...</string>    
+    <string name="generateProgressDialogTitle">Loading...</string>    
+    <string name="removeProgressDialogTitle">Removing...</string>    
     <string name="alertDialogTitle">Are you sure you want to remove them all?</string>    
 </resources>

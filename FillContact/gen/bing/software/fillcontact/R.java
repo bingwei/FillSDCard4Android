@@ -41,7 +41,7 @@ public final class R {
         public static final int addContactButtonLabel=0x7f040001;
         public static final int addContactTitle=0x7f040002;
         public static final int addEmail=0x7f04000f;
-        public static final int alertDialogTitle=0x7f040017;
+        public static final int alertDialogTitle=0x7f040018;
         public static final int allAccounts=0x7f040003;
         public static final int app_name=0x7f040004;
         public static final int contactAmount=0x7f040010;
@@ -53,8 +53,9 @@ public final class R {
         public static final int contactPhoneDigit=0x7f040012;
         public static final int contactPhoneLabel=0x7f040008;
         public static final int generate=0x7f040013;
-        public static final int progressDialogTitle=0x7f040016;
+        public static final int generateProgressDialogTitle=0x7f040016;
         public static final int removeAll=0x7f040014;
+        public static final int removeProgressDialogTitle=0x7f040017;
         public static final int save=0x7f040009;
         public static final int selectAccountLabel=0x7f04000a;
         public static final int selectLabel=0x7f04000b;

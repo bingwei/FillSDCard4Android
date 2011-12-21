@@ -18,6 +18,7 @@ package bing.software.fillcontact;
 
 import java.util.ArrayList;
 
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
@@ -39,6 +40,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -71,12 +73,17 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
     private AccountData mSelectedAccount;
     private boolean mAddEmail;
     private CheckBox mAddEmailControl;
-    static final int PROGRESS_DIALOG = 0;
-    private ProgressThread progressThread;
-    private ProgressDialog mProgressDialog;
+    static final int GENERATE_PROGRESS_DIALOG = 0xFFDE;
+    static final int REMOVE_PROGRESS_DIALOG = 0xFFDB;
+    private GenerateProgressThread generateProgressThread;
+    private ProgressDialog mGenerateProgressDialog;
+    private ProgressDialog mCleanProgressDialog;
     private int contactAmount;
     private int nameDigit;
     private int phoneDigit;
+    private final int REMOVE_ON = 1;
+    private final int REMOVE_STOP = 0;
+    private int REMOVE_STATUS = REMOVE_ON;
 
     /**
      * Called when the activity is first created. Responsible for initializing the UI.
@@ -130,10 +137,10 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
             public void onClick(View v) {
             	AlertDialog.Builder builder = new AlertDialog.Builder(ContactAdder.this);
             	builder.setMessage(ContactAdder.this.getString(R.string.alertDialogTitle))
-            	       .setCancelable(false)
+            	       .setCancelable(true)
             	       .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             	           public void onClick(DialogInterface dialog, int id) {
-            	        	   cleanContactEntry();
+            	        	   showDialog(REMOVE_PROGRESS_DIALOG);
             	           }
             	       })
             	       .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -152,6 +159,15 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
         });
     }
     
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event){
+    	Log.d(TAG, "KeyEvent is " + event);
+    	if(REMOVE_STATUS == REMOVE_ON && keyCode == KeyEvent.KEYCODE_BACK){
+    		REMOVE_STATUS = REMOVE_STOP;
+    	}
+    	return super.onKeyUp(keyCode, event);
+    }
+    
     
 
     /**
@@ -163,15 +179,8 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
         createContactEntry();
     }
     
-    private void cleanContactEntry(){
-       	ContentResolver cv = getContentResolver();
-           Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-           while (cursor.moveToNext()) {
-               String lookupKey = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
-               Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, lookupKey);
-               cv.delete(uri, null, null);
-           }
-       }
+    
+
 
     /**
      * Creates a contact entry from the current UI values in the account named by mSelectedAccount.
@@ -204,7 +213,7 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
         // Note: We use RawContacts because this data must be associated with a particular account.
         //       The system will aggregate this with any other data for this contact and create a
         //       coresponding entry in the ContactsContract.Contacts provider for us.
-        showDialog(PROGRESS_DIALOG);
+        showDialog(GENERATE_PROGRESS_DIALOG);
     }
 
     /**
@@ -222,12 +231,17 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
      */
     protected Dialog onCreateDialog(int id) {
         switch(id) {
-        case PROGRESS_DIALOG:
-        	mProgressDialog = new ProgressDialog(this);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            mProgressDialog.setMessage(ContactAdder.this.getString(R.string.progressDialogTitle));
-            mProgressDialog.setCancelable(true);
-            return mProgressDialog;
+        case GENERATE_PROGRESS_DIALOG:
+        	mGenerateProgressDialog = new ProgressDialog(this);
+            mGenerateProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            mGenerateProgressDialog.setMessage(ContactAdder.this.getString(R.string.generateProgressDialogTitle));
+            mGenerateProgressDialog.setCancelable(true);
+            return mGenerateProgressDialog;
+        case REMOVE_PROGRESS_DIALOG:
+        	mCleanProgressDialog = new ProgressDialog(this);
+        	mCleanProgressDialog.setMessage(ContactAdder.this.getString(R.string.removeProgressDialogTitle));
+        	mCleanProgressDialog.setCancelable(true);
+        	return mCleanProgressDialog;
         default:
             return null;
         }
@@ -239,21 +253,27 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
     @Override
     protected void onPrepareDialog(int id, Dialog dialog) {
         switch(id) {
-        case PROGRESS_DIALOG:
-        	mProgressDialog.setMax(contactAmount);
-        	mProgressDialog.setProgress(0);
-            progressThread = new ProgressThread(handler, contactAmount, nameDigit, phoneDigit, mAddEmail);
-            progressThread.start();
+        case GENERATE_PROGRESS_DIALOG:
+        	mGenerateProgressDialog.setMax(contactAmount);
+        	mGenerateProgressDialog.setProgress(0);
+            generateProgressThread = new GenerateProgressThread(mGenerateHandler, contactAmount, nameDigit, phoneDigit, mAddEmail);
+            generateProgressThread.start();
+            break;
+        case REMOVE_PROGRESS_DIALOG:
+        	new Thread(new CleanThread(mCleanHandler)).start();
+        	break;
+        default:
             break;
         }
     }
     
-    private Handler handler = new Handler(){
+    private Handler mGenerateHandler = new Handler(){
         public void handleMessage(Message msg) {
             int current = msg.arg1;
-            mProgressDialog.setProgress(current);
+            Log.d(TAG, "current is " + current);
+            mGenerateProgressDialog.setProgress(current);
             if (current >= contactAmount){
-                dismissDialog(PROGRESS_DIALOG);
+            	mGenerateProgressDialog.dismiss();
                 ContactAdder.this.finish();
             }
         }
@@ -262,7 +282,7 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
     /**
      * New thread used to generate contact
      */
-    class ProgressThread extends Thread{
+    class GenerateProgressThread extends Thread{
         private String name = null;
         private String phone = null;
         private String email = null;
@@ -275,7 +295,7 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
         final static int STATE_DONE = 0;
         final static int STATE_RUNNING = 1;
 
-        public ProgressThread(Handler h, int contactAmount, int nameDigit, int phoneDigit, boolean mAddEmail){
+        public GenerateProgressThread(Handler h, int contactAmount, int nameDigit, int phoneDigit, boolean mAddEmail){
         	this.mHandler = h;
         	this.contactAmount = contactAmount;
         	this.nameDigit = nameDigit;
@@ -284,7 +304,7 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
         }
     	@Override
     	public void run() {
-			for(int i = 1; i <= contactAmount; i++){
+			for(int i = 0; i < contactAmount; i++){
 				try{
 					name = Utils.getRandomString(nameDigit);
 					phone = Utils.getRandomNumber(phoneDigit);
@@ -351,13 +371,47 @@ public final class ContactAdder extends Activity implements OnAccountsUpdateList
 					Log.e(TAG, "" + txt + e);
 				}
 				Message msg = mHandler.obtainMessage();
-				msg.arg1 = i;
+				msg.arg1 = i+1;
 				mHandler.sendMessage(msg);
-				if(!mProgressDialog.isShowing()){
+				if(!mGenerateProgressDialog.isShowing()){
 					return ;
 				}
     		}
     	}
+    }
+    
+    private Handler mCleanHandler = new Handler() {
+        public void handleMessage(Message msg) {
+        	switch(msg.what){
+        	case REMOVE_STOP:
+        		mCleanProgressDialog.dismiss();
+        		ContactAdder.this.finish();
+        	default:
+        		break;
+        	}
+        }
+    };
+    
+    class CleanThread extends Thread{
+    	Handler mHandler;
+    	public CleanThread(Handler h){
+    		mHandler = h;
+    	}
+		@Override
+		public void run() {
+			REMOVE_STATUS = REMOVE_ON;
+			ContentResolver cv = getContentResolver();
+			Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+			while (cursor.moveToNext() && REMOVE_STATUS == REMOVE_ON) {
+		       String lookupKey = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
+		       Uri uri = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_LOOKUP_URI, lookupKey);
+		       cv.delete(uri, null, null);
+		       mHandler.sendEmptyMessage(REMOVE_STATUS);
+			}
+			REMOVE_STATUS = REMOVE_STOP;
+			mHandler.sendEmptyMessage(REMOVE_STATUS);
+		}
+    	
     }
 
     /**
